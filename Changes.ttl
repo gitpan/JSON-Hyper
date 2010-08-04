@@ -28,6 +28,17 @@ my:v_0-001_00
 	:file-release   <http://backpan.cpan.org/authors/id/T/TO/TOBYINK/JSON-Hyper-0.001_00.tar.gz> ;
 	rdfs:comment    "Developer release"@en .
 
+my:v_0-001_01
+
+	a               :Version ;
+	dc:issued       "2010-08-04"^^xsd:date ;
+	:revision       "0.001_01"^^xsd:string ;
+	:file-release   <http://backpan.cpan.org/authors/id/T/TO/TOBYINK/JSON-Hyper-0.001_01.tar.gz> ;
+	dcs:changeset [
+		dcs:versus my:v_0-001_00 ;
+		dcs:item   [ rdfs:label "process_includes is no longer recursive by default."@en ; a dcs:Change ]
+		] .
+
 #############################################################
 
 my:project
@@ -46,7 +57,7 @@ my:project
 	:tester         toby:i ;
 	:created        "2010-08-01"^^xsd:date ;
 	:license        <http://dev.perl.org/licenses/> , <http://opensource.org/licenses/mit-license.php> ;
-	:release        my:v_0-001_00 .
+	:release        my:v_0-001_00 , my:v_0-001_01 .
 
 #############################################################
 

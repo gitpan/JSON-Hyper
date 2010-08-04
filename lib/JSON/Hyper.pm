@@ -12,7 +12,8 @@ use Storable qw[dclone];
 use URI;
 use URI::Escape qw[uri_unescape];
 
-our $VERSION = '0.001_00';
+our $VERSION = '0.001_01';
+our $DEBUG = 0;
 
 sub json_ref
 {
@@ -123,16 +124,15 @@ sub _resolve_relative_ref
 
 sub process_includes
 {
-	my ($self, $original, $base) = @_;
+	my ($self, $original, $base, $recurse) = @_;
 	$original = from_json($original) unless ref $original;
-	my $object = dclone($original);
-	$self->_process_includes($object);
-	return $object;
+	$self->_process_includes($original, $base, $recurse);
+	return $original;
 }
 
 sub _process_includes
 {
-	my ($self, $object, $base) = @_;
+	my ($self, $object, $base, $recurse) = @_;
 	
 	my @links = $self->find_links($object, $base);
 	my $full;
@@ -153,22 +153,25 @@ sub _process_includes
 			delete $object->{ $full->{'property'} };
 			while (my($k,$v) = each %$substitute)
 			{
-				$object->{$k} = dclone($v);
+				$object->{$k} = $v;
 			}
 		}
+		return;
 	}
-	elsif (ref $object eq 'ARRAY')
+	return unless $recurse;
+
+	if (ref $object eq 'ARRAY')
 	{
 		foreach my $i (@$object)
 		{
-			$self->_process_includes($i, $base);
+			$self->_process_includes($i, $base, $recurse);
 		}
 	}
 	elsif (ref $object eq 'HASH')
 	{
 		foreach my $i (values %$object)
 		{
-			$self->_process_includes($i, $base);
+			$self->_process_includes($i, $base, $recurse);
 		}
 	}
 }
@@ -177,29 +180,66 @@ sub get
 {
 	my ($self, $uri) = @_;
 	my ($resource, $fragment) = split /\#/, $uri, 2;
-	
-	my $response = $self->ua->get($resource);
-	return unless $response->is_success;
-	
-	my $object = from_json( $response->decoded_content );
+	my $object = $self->_get($resource);
 	return $object unless $fragment;
 	return $self->resolve_fragment($object, $fragment);
+}
+
+sub _get
+{
+	my ($self, $resource) = @_;
+	
+	warn "GETting $resource" if $DEBUG;
+	
+	unless ($self->{'cache'}->{$resource})
+	{
+		my $response = $self->ua->get($resource);
+		return unless $response->is_success;
+		$self->{'cache'}->{$resource} = from_json( $response->decoded_content );
+		$self->{'http_cache'}->{$resource} = $resource;
+	}
+	
+	my @r = ($self->{'cache'}->{$resource}, $self->{'http_cache'}->{$resource});
+	return wantarray ? @r : $r[0];
 }
 
 sub resolve_fragment
 {
 	my ($self, $object, $fragment) = @_;
 	my $style = $self->schema->{fragmentResolution} || 'slash-delimited';
-	
+
 	$object = from_json($object) unless ref $object;
 	return $object unless $fragment;
-	
+
+	$fragment =~ s!^#!!;
+
 	if ($style =~ /^(json.?)?path$/i)
 	{
 		my $jsonp   = JSON::Path->new(uri_unescape($fragment));
 		my @matches = $jsonp->values($object);
 		return @matches;
 	}
+	elsif (lc $style eq 'dot-delimited')
+	{
+		$fragment =~ s!^\.!!;
+	}
+	elsif (lc $style eq 'slash-delimited')
+	{
+		$fragment =~ s!^/!!;
+	}
+	else
+	{
+		carp "Unknown fragment resolution method: $style";
+		return;
+	}
+	
+	return $self->_resolve_fragment($object, $fragment);
+}
+
+sub _resolve_fragment
+{
+	my ($self, $object, $fragment) = @_;
+	my $style = $self->schema->{fragmentResolution} || 'slash-delimited';
 	
 	my ($first, $rest);
 	if (lc $style eq 'dot-delimited')
@@ -209,11 +249,6 @@ sub resolve_fragment
 	elsif (lc $style eq 'slash-delimited')
 	{
 		($first, $rest) = split /\//, $fragment, 2;
-	}
-	else
-	{
-		carp "Unknown fragment resolution method: $style";
-		return;
 	}
 
 	$first = uri_unescape($first);
@@ -235,7 +270,7 @@ sub resolve_fragment
 	
 	if (length $rest)
 	{
-		return $self->resolve_fragment($value, $rest);
+		return $self->_resolve_fragment($value, $rest);
 	}
 	else
 	{
@@ -325,7 +360,7 @@ fragments, the following:
  my $hyper    = JSON::Hyper->new($hyperschema);
  my ($result) = $hyper->get('http://example.com/data.json#foo/bar/0');
 
-Is equivalent to:
+Is roughly equivalent to:
 
  use JSON;
  use LWP::UserAgent;
@@ -334,20 +369,30 @@ Is equivalent to:
  my $object   = from_json($response->decoded_content);
  my $result   = $object->{'foo'}->{'bar'}->[0];
 
+Note, if called multiple times on the same URL will return not just
+equivalent objects, but the same object.
+
 So, why does this method return a list of results instead of just
 a single result? In most cases, there will be either 0 or 1 items
 on the list; however, JSONPath allows a path to match multiple
 nodes, so there will occasionally be more than one result.
 
-=item C<< process_includes($object, $base) >>
+=item C<< resolve_fragment($object, $fragment) >>
+
+Used by C<get> to resolve the fragment part of a URL against an object.
+
+=item C<< process_includes($object, $base, $recurse) >>
 
 Given an JSON object (or equivalent Perl nested hashref/arrayref
 structure) and optional base URL, crawls the object finding
 rel="full" links, dereferences them using C<get> and replaces
-the appropriate nodes with the retrieved content.
+the appropriate nodes with the retrieved content. $recurse
+is a boolean.
 
 This has the effect of rel="full" behaving like inclusion does
 in various programming languages.
+
+This modifies the given object rather than creating a new object.
 
 =back
 

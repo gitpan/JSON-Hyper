@@ -55,7 +55,7 @@ DESCRIPTION
          my $hyper    = JSON::Hyper->new($hyperschema);
          my ($result) = $hyper->get('http://example.com/data.json#foo/bar/0');
 
-        Is equivalent to:
+        Is roughly equivalent to:
 
          use JSON;
          use LWP::UserAgent;
@@ -64,19 +64,28 @@ DESCRIPTION
          my $object   = from_json($response->decoded_content);
          my $result   = $object->{'foo'}->{'bar'}->[0];
 
+        Note, if called multiple times on the same URL will return not just
+        equivalent objects, but the same object.
+
         So, why does this method return a list of results instead of just a
         single result? In most cases, there will be either 0 or 1 items on
         the list; however, JSONPath allows a path to match multiple nodes,
         so there will occasionally be more than one result.
 
-    "process_includes($object, $base)"
+    "resolve_fragment($object, $fragment)"
+        Used by "get" to resolve the fragment part of a URL against an
+        object.
+
+    "process_includes($object, $base, $recurse)"
         Given an JSON object (or equivalent Perl nested hashref/arrayref
         structure) and optional base URL, crawls the object finding
         rel="full" links, dereferences them using "get" and replaces the
-        appropriate nodes with the retrieved content.
+        appropriate nodes with the retrieved content. $recurse is a boolean.
 
         This has the effect of rel="full" behaving like inclusion does in
         various programming languages.
+
+        This modifies the given object rather than creating a new object.
 
 BUGS
     Please report any bugs to <http://rt.cpan.org/>.
