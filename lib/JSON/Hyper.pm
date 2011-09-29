@@ -12,13 +12,13 @@ use Storable qw[dclone];
 use URI;
 use URI::Escape qw[uri_unescape];
 
-our $VERSION = '0.001_01';
+our $VERSION = '0.010';
 our $DEBUG = 0;
 
 sub json_ref
 {
 	return {
-		description => "A hyper schema for the JSON referencing convention",
+		description => 'A hyper schema for the JSON referencing convention',
 		links       => [
 			{
 				href => '{id}',
@@ -30,10 +30,10 @@ sub json_ref
 			},
 			{
 				href => '{$schema}',
-				link => 'definedby"',
+				link => 'describedby',
 			},
 		],
-		fragmentResolution   => "dot-delimited",
+		fragmentResolution   => 'dot-delimited',
 		additionalProperties => { '$ref' => '#' },
 		};
 }
@@ -83,15 +83,20 @@ sub find_links
 	
 	foreach my $link (@{ $self->schema->{links} })
 	{
-		my ($start, $property, $end)
-			= ($link->{href} =~ /^(.*)\{(.+)\}(.*)$/);
+		my $missing = 0;
+		my $href = $link->{href};
+		$href =~ s/\{(.+?)\}/if (exists $node->{$1}) { $node->{$1}; } else { $missing++; ''; }/gex;
 		
-		if (defined $node->{$property})
+		if (!$missing)
 		{
 			my $x = {
-				href     => $start.$node->{$property}.$end,
-				rel      => ($link->{'rel'} || $link->{'link'}),
-				property => $property,
+				href         => $href,
+				rel          => ($link->{'rel'} || $link->{'link'}),
+				targetSchema => $link->{'targetSchema'},
+				method       => $link->{'method'},
+				enctype      => $link->{'enctype'},
+				schema       => $link->{'schema'},
+				properties   => $link->{'properties'},
 				};
 			$x->{'href'} = $self->_resolve_relative_ref($x->{'href'}, $base)
 				if defined $base;
@@ -413,7 +418,7 @@ Toby Inkster E<lt>tobyink@cpan.orgE<gt>.
 
 =head1 COPYRIGHT AND LICENCE
 
-Copyright 2010 Toby Inkster.
+Copyright 2010-2011 Toby Inkster.
 
 This module is tri-licensed. It is available under the X11 (a.k.a. MIT)
 licence; you can also redistribute it and/or modify it under the same

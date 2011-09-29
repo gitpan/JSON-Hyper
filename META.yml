@@ -8,7 +8,7 @@ build_requires:
 configure_requires:
   ExtUtils::MakeMaker: 6.42
 distribution_type: module
-generated_by: 'Module::Install version 0.95'
+generated_by: 'Module::Install version 1.00'
 keywords:
   - JSON
   - schema
@@ -35,7 +35,7 @@ requires:
   perl: 5.8.0
 resources:
   bugtracker: http://rt.cpan.org/Dist/Display.html?Queue=JSON-Hyper
-  homepage: http://search.cpan.org/dist/JSON-Hyper/
+  homepage: https://metacpan.org/release/JSON-Hyper
   license: http://dev.perl.org/licenses/
-  repository: http://goddamn.co.uk/viewvc/perlmods/JSON-Hyper/
-version: 0.001_01
+  repository: http://goddamn.co.uk/svn-web/perlmods/browse/JSON-Hyper/
+version: 0.010

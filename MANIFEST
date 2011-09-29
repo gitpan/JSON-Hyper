@@ -1,3 +1,4 @@
+TODO
 Changes
 Changes.ttl
 Changes.xml
@@ -8,7 +9,6 @@ README
 META.yml
 SIGNATURE
 
-t/00sig.t
 t/01basic.t
 
 inc/Module/AutoInstall.pm
@@ -24,6 +24,5 @@ inc/Module/Install.pm
 inc/Module/Install/ReadmeFromPod.pm
 inc/Module/Install/Win32.pm
 inc/Module/Install/WriteAll.pm
-inc/Test/Signature.pm
 
 lib/JSON/Hyper.pm

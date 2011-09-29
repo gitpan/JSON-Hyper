@@ -39,6 +39,19 @@ my:v_0-001_01
 		dcs:item   [ rdfs:label "process_includes is no longer recursive by default."@en ; a dcs:Change ]
 		] .
 
+my:v_0-010
+
+	a               :Version ;
+	dc:issued       "2011-09-29"^^xsd:date ;
+	:revision       "0.010"^^xsd:string ;
+	:file-release   <http://backpan.cpan.org/authors/id/T/TO/TOBYINK/JSON-Hyper-0.010.tar.gz> ;
+	dcs:changeset [
+		dcs:versus my:v_0-001_01 ;
+		dcs:item   [ rdfs:label "Support targetSchema attribute."@en ; a dcs:Update ] ;
+		dcs:item   [ rdfs:label "Support schema attribute."@en ; a dcs:Update ] ;
+		dcs:item   [ rdfs:label "href attributes with multiple substitutions are now supported."@en ; a dcs:Bugfix ]
+		] .
+
 #############################################################
 
 my:project
@@ -47,17 +60,17 @@ my:project
 	:name           "JSON-Hyper" ;
 	:shortdesc      "extract links from JSON via a schema"@en ;
 	:programming-language  "Perl" ;
-	:homepage       <http://search.cpan.org/dist/JSON-Hyper/> ;
-	:download-page  <http://search.cpan.org/dist/JSON-Hyper/> ;
+	:homepage       <https://metacpan.org/release/JSON-Hyper> ;
+	:download-page  <https://metacpan.org/release/JSON-Hyper> ;
 	:bug-database   <http://rt.cpan.org/Dist/Display.html?Queue=JSON-Hyper> ;
-	:repository     [ a :SVNRepository ; :browse <http://goddamn.co.uk/viewvc/perlmods/JSON-Hyper/> ] ;
+	:repository     [ a :SVNRepository ; :browse <http://goddamn.co.uk/svn-web/perlmods/browse/JSON-Hyper/> ] ;
 	:maintainer     toby:i ;
 	:developer      toby:i ;
 	:documenter     toby:i ;
 	:tester         toby:i ;
 	:created        "2010-08-01"^^xsd:date ;
 	:license        <http://dev.perl.org/licenses/> , <http://opensource.org/licenses/mit-license.php> ;
-	:release        my:v_0-001_00 , my:v_0-001_01 .
+	:release        my:v_0-001_00 , my:v_0-001_01 , my:v_0-010 .
 
 #############################################################
 
@@ -66,7 +79,7 @@ toby:i
 	a               foaf:Person ;
 	foaf:name       "Toby Inkster" ;
 	foaf:homepage   <http://tobyinkster.co.uk/> ;
-	foaf:page       <http://search.cpan.org/~tobyink/> ;
+	foaf:page       <https://metacpan.org/author/TOBYINK> ;
 	foaf:mbox       <mailto:tobyink@cpan.org> ;
 	<http://www.w3.org/2002/07/owl#sameAs> <http://purl.org/NET/cpan-uri/person/tobyink> .
 

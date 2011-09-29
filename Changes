@@ -6,9 +6,14 @@ JSON-Hyper
 ==========
 
 Created:      2010-08-01
-Home page:    <http://search.cpan.org/dist/JSON-Hyper/>
+Home page:    <https://metacpan.org/release/JSON-Hyper>
 Bug tracker:  <http://rt.cpan.org/Dist/Display.html?Queue=JSON-Hyper>
 Maintainer:   Toby Inkster <mailto:tobyink@cpan.org>
+
+0.010 [2011-09-29]
+ - (Update) Support schema attribute.
+ - (Bugfix) href attributes with multiple substitutions are now supported.
+ - (Update) Support targetSchema attribute.
 
 0.001_01 [2010-08-04]
  - process_includes is no longer recursive by default.
