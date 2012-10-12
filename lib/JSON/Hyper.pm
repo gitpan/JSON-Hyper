@@ -1,7 +1,9 @@
 package JSON::Hyper;
 
 use 5.008;
-use common::sense;
+use strict;
+
+use JSON::Hyper::Link;
 
 use Carp;
 use JSON;
@@ -12,8 +14,9 @@ use Storable qw[dclone];
 use URI;
 use URI::Escape qw[uri_unescape];
 
-our $VERSION = '0.010';
-our $DEBUG = 0;
+our $AUTHORITY = 'cpan:TOBYINK';
+our $VERSION   = '0.011';
+our $DEBUG     = 0;
 
 sub json_ref
 {
@@ -35,15 +38,15 @@ sub json_ref
 		],
 		fragmentResolution   => 'dot-delimited',
 		additionalProperties => { '$ref' => '#' },
-		};
+	};
 }
 
 sub new
 {
 	my ($class, $schema) = @_;
-	$schema ||= &json_ref;
+	$schema ||= json_ref();
 	$schema = from_json($schema) unless ref $schema;
-	return bless {schema=>$schema, ua=>undef}, $class;
+	return bless { schema => $schema, ua => undef } => $class;
 }
 
 sub schema
@@ -54,7 +57,7 @@ sub schema
 
 sub ua
 {
-	my $self = shift;	
+	my $self = shift;
 	$self = {} unless blessed($self);
 	
 	if (@_)
@@ -65,10 +68,14 @@ sub ua
 			unless blessed $self->{'ua'} && $self->{'ua'}->isa('LWP::UserAgent');
 		return $rv;
 	}
-	unless (blessed $self->{'ua'} && $self->{'ua'}->isa('LWP::UserAgent'))
+	unless (blessed $self->{'ua'} and $self->{'ua'}->isa('LWP::UserAgent'))
 	{
-		$self->{'ua'} = LWP::UserAgent->new(agent=>sprintf('%s/%s ', __PACKAGE__, $VERSION));
-		$self->{'ua'}->default_header('Accept'=>'application/json, application/schema+json');
+		$self->{'ua'} = 'LWP::UserAgent'->new(
+			agent=>sprintf('%s/%s ', __PACKAGE__, $VERSION)
+		);
+		$self->{'ua'}->default_header(
+			'Accept'=>'application/json, application/schema+json',
+		);
 	}
 	return $self->{'ua'};
 }
@@ -89,7 +96,9 @@ sub find_links
 		
 		if (!$missing)
 		{
-			my $x = {
+			$href = $self->_resolve_relative_ref($href, $base) if defined $base;
+			
+			push @rv, 'JSON::Hyper::Link'->new({
 				href         => $href,
 				rel          => ($link->{'rel'} || $link->{'link'}),
 				targetSchema => $link->{'targetSchema'},
@@ -97,10 +106,7 @@ sub find_links
 				enctype      => $link->{'enctype'},
 				schema       => $link->{'schema'},
 				properties   => $link->{'properties'},
-				};
-			$x->{'href'} = $self->_resolve_relative_ref($x->{'href'}, $base)
-				if defined $base;
-			push @rv, $x;
+			});
 		}
 	}
 	
@@ -303,14 +309,14 @@ JSON::Hyper - extract links from JSON via a schema
 
 =head1 DESCRIPTION
 
-The JSON Hyper Schema proposal defines hypertext navigation through
-data structures represented by JSON.
+The JSON Hyper Schema proposal defines hypertext navigation through data
+structures represented by JSON.
 
 =head2 Constructor
 
 =over 4
 
-=item C<< JSON::Hyper->new($hyperschema) >>
+=item C<< new($hyperschema) >>
 
 Given a JSON (or equivalent Perl nested hashref/arrayref structure)
 Hyper Schema, returns a Perl object capable of interpreting that schema.
@@ -328,9 +334,9 @@ schema (described at L<http://json-schema.org/json-ref>)
 
 Returns the original schema as a hashref/arrayref structure.
 
-=back
+=item C<< ua >>
 
-=over 4
+Get/set the LWP::UserAgent instance used to retrieve things.
 
 =item C<< find_links($object, $base) >>
 
@@ -338,8 +344,7 @@ Given a JSON object (or equivalent Perl nested hashref/arrayref structure)
 and optionally a base URL for interpreting relative URI references, returns
 a list of links found on object node. Does not operate recursively.
 
-Each link is a hashref with a key 'href' containing the link target. Other
-keys are possible, including 'rel' which is very common.
+Each link is a L<JSON::Hyper::Link> object.
 
 =item C<< get($uri) >>
 
@@ -372,7 +377,7 @@ Is roughly equivalent to:
  my $ua       = LWP::UserAgent->new;
  my $response = $ua->get('http://example.com/data.json');
  my $object   = from_json($response->decoded_content);
- my $result   = $object->{'foo'}->{'bar'}->[0];
+ my $result   = $object->{foo}{bar}[0];
 
 Note, if called multiple times on the same URL will return not just
 equivalent objects, but the same object.
@@ -380,7 +385,8 @@ equivalent objects, but the same object.
 So, why does this method return a list of results instead of just
 a single result? In most cases, there will be either 0 or 1 items
 on the list; however, JSONPath allows a path to match multiple
-nodes, so there will occasionally be more than one result.
+nodes, so there will occasionally be more than one result. (In 
+scalar context, this method just returns the first result anyway.)
 
 =item C<< resolve_fragment($object, $fragment) >>
 
@@ -401,11 +407,23 @@ This modifies the given object rather than creating a new object.
 
 =back
 
+=head2 Utilities
+
+=over
+
+=item C<< JSON::Hyper::json_ref() >>
+
+Returns the JSON referencing hyperschema as a hashref.
+
+=back
+
 =head1 BUGS
 
 Please report any bugs to L<http://rt.cpan.org/>.
 
 =head1 SEE ALSO
+
+L<JSON::Hyper::Link>.
 
 Related modules: L<JSON::T>, L<JSON::Path>, L<JSON::GRDDL>,
 L<JSON::Schema>.
@@ -418,7 +436,7 @@ Toby Inkster E<lt>tobyink@cpan.orgE<gt>.
 
 =head1 COPYRIGHT AND LICENCE
 
-Copyright 2010-2011 Toby Inkster.
+Copyright 2010-2012 Toby Inkster.
 
 This module is tri-licensed. It is available under the X11 (a.k.a. MIT)
 licence; you can also redistribute it and/or modify it under the same

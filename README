@@ -15,7 +15,7 @@ DESCRIPTION
     structures represented by JSON.
 
   Constructor
-    "JSON::Hyper->new($hyperschema)"
+    "new($hyperschema)"
         Given a JSON (or equivalent Perl nested hashref/arrayref structure)
         Hyper Schema, returns a Perl object capable of interpreting that
         schema.
@@ -27,14 +27,16 @@ DESCRIPTION
     "schema"
         Returns the original schema as a hashref/arrayref structure.
 
+    "ua"
+        Get/set the LWP::UserAgent instance used to retrieve things.
+
     "find_links($object, $base)"
         Given a JSON object (or equivalent Perl nested hashref/arrayref
         structure) and optionally a base URL for interpreting relative URI
         references, returns a list of links found on object node. Does not
         operate recursively.
 
-        Each link is a hashref with a key 'href' containing the link target.
-        Other keys are possible, including 'rel' which is very common.
+        Each link is a JSON::Hyper::Link object.
 
     "get($uri)"
         Performs an HTTP request for the given URI and returns a list of
@@ -62,7 +64,7 @@ DESCRIPTION
          my $ua       = LWP::UserAgent->new;
          my $response = $ua->get('http://example.com/data.json');
          my $object   = from_json($response->decoded_content);
-         my $result   = $object->{'foo'}->{'bar'}->[0];
+         my $result   = $object->{foo}{bar}[0];
 
         Note, if called multiple times on the same URL will return not just
         equivalent objects, but the same object.
@@ -70,7 +72,8 @@ DESCRIPTION
         So, why does this method return a list of results instead of just a
         single result? In most cases, there will be either 0 or 1 items on
         the list; however, JSONPath allows a path to match multiple nodes,
-        so there will occasionally be more than one result.
+        so there will occasionally be more than one result. (In scalar
+        context, this method just returns the first result anyway.)
 
     "resolve_fragment($object, $fragment)"
         Used by "get" to resolve the fragment part of a URL against an
@@ -87,10 +90,16 @@ DESCRIPTION
 
         This modifies the given object rather than creating a new object.
 
+  Utilities
+    "JSON::Hyper::json_ref()"
+        Returns the JSON referencing hyperschema as a hashref.
+
 BUGS
     Please report any bugs to <http://rt.cpan.org/>.
 
 SEE ALSO
+    JSON::Hyper::Link.
+
     Related modules: JSON::T, JSON::Path, JSON::GRDDL, JSON::Schema.
 
     <http://tools.ietf.org/html/draft-zyp-json-schema>.
@@ -99,7 +108,7 @@ AUTHOR
     Toby Inkster <tobyink@cpan.org>.
 
 COPYRIGHT AND LICENCE
-    Copyright 2010-2011 Toby Inkster.
+    Copyright 2010-2012 Toby Inkster.
 
     This module is tri-licensed. It is available under the X11 (a.k.a. MIT)
     licence; you can also redistribute it and/or modify it under the same

@@ -41,7 +41,7 @@ my @got = sort { $a->{rel} cmp $b->{rel} }
 	$hyper->find_links($object, 'http://example.com/food/');
 
 my @expected = (
-	{
+	JSON::Hyper::Link->new({
 		'rel' => 'children',
 		'enctype' => undef,
 		'href' => 'http://example.com/food/find_children?id=lemons',
@@ -49,8 +49,8 @@ my @expected = (
 		'schema' => undef,
 		'properties' => undef,
 		'targetSchema' => undef
-	},
-	{
+	}),
+	JSON::Hyper::Link->new({
 		'rel' => 'meta',
 		'enctype' => undef,
 		'href' => 'http://example.com/food/relationship_history?id1=lemons&id2=citrus_fruits',
@@ -58,8 +58,8 @@ my @expected = (
 		'schema' => undef,
 		'properties' => undef,
 		'targetSchema' => undef
-	},
-	{
+	}),
+	JSON::Hyper::Link->new({
 		'rel' => 'self',
 		'enctype' => undef,
 		'href' => 'http://example.com/food/lemons',
@@ -67,8 +67,8 @@ my @expected = (
 		'schema' => undef,
 		'properties' => undef,
 		'targetSchema' => undef
-	},
-	{
+	}),
+	JSON::Hyper::Link->new({
 		'rel' => 'up',
 		'enctype' => undef,
 		'href' => 'http://example.com/food/citrus_fruits',
@@ -76,7 +76,7 @@ my @expected = (
 		'schema' => undef,
 		'properties' => undef,
 		'targetSchema' => undef
-	},
+	}),
 );
 
 is_deeply(\@got, \@expected, 'Returned correct data.');
